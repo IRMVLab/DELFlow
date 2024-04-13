@@ -1,0 +1,85 @@
+trainset:
+  name: kitti
+  root_dir: /data/KITTI_SCENE
+  split: traing160
+  n_workers: 8
+  max_depth: 90
+  drop_last: true
+
+valset:
+  name: kitti
+  root_dir: /data/KITTI_SCENE
+  split: training40
+  n_workers: 8
+  max_depth: 90
+
+model:
+  name: kitti
+  height: 320
+  width: 1280
+  stride_h: [2, 2, 2, 2, 2, 2]
+  stride_w: [2, 2, 2, 2, 2, 2]
+  freeze_bn: false
+  batch_size: 12
+  
+  pwc2d:
+    norm:
+      feature_pyramid: batch_norm
+      flow_estimator: null
+      context_network: null
+    max_displacement: 4
+
+  pwc3d:
+    norm:
+      feature_pyramid: batch_norm
+      correlation: null
+      flow_estimator: null
+    k: 16
+    kernel_size: [10, 30]
+
+  loss2d:
+    level_weights: [16, 8, 4, 2, 1]
+    order: robust
+
+  loss3d:
+    level_weights: [8, 4, 2, 1, 0.5]
+    order: robust
+
+
+training:
+  opt: adamw
+  momentum: 0.9
+  weight_decay: 0.000001
+  grad_max_norm: 25
+  accum_iter: 1
+
+  sched: cosine
+  epochs: 1200
+  # lr_2d: 0.0005 # LR for 2D branch
+  # lr_3d: 0.001 # LR for 3D branch
+  lr_2d: 0.0005 # LR for 2D branch
+  lr_3d: 0.001 # LR for 3D branch
+  min_lr: 0.00001
+  warmup_lr: 0.00001
+  warmup_epochs: 0
+  cooldown_epochs: 0
+
+log:
+  dir: ./experiment
+  run_name: kitti
+  save_ckpt: true
+  save_scalar_summary: true
+  save_ckpt_every_n_epochs: 1
+  save_summary_every_n_steps: 100
+
+ckpt:
+  path: null
+  save_path: ./checkpoints
+  resume: false
+
+val_interval: 4
+gpu: 1
+port: random # for multi-gpu training
+amp: false
+debug: false
+sync_bn: true

@@ -1,0 +1,121 @@
+trainset:
+  name: flyingthings3d
+  root_dir: /data/processed_flyingthings3d
+  split: train
+  n_workers: 4
+  drop_last: true
+  full: true
+
+  augmentation:
+    enabled: true
+    color_jitter:
+      enabled: true
+      brightness: 0.3
+      contrast: 0.3
+      saturation: 0.3
+      hue: 0.159  # 0.5/3.14
+    random_horizontal_flip:
+      enabled: false
+    random_vertical_flip:
+      enabled: false
+    random_crop:
+      enabled: false
+      crop_size: [640, 384] # [640, 384]
+    random_scale:
+      enabled: false
+    random_down:
+      enabled: true
+      type: train
+
+valset:
+  name: flyingthings3d
+  root_dir: /data/processed_flyingthings3d
+  split: val
+  n_workers: 4
+  full: true
+
+  augmentation:
+    enabled: false
+    color_jitter:
+      enabled: false
+    random_horizontal_flip:
+      enabled: false
+    random_vertical_flip:
+      enabled: false
+    random_crop:
+      enabled: false
+      crop_size: [640, 384] # [640, 384]
+    random_scale:
+      enabled: false
+    random_down:
+      enabled: true
+      type: eval
+
+model:
+  name: flyingthings
+  height: 256
+  width: 448
+  stride_h: [2, 2, 2, 2, 2, 2]
+  stride_w: [2, 2, 2, 2, 2, 2]
+  freeze_bn: false
+  batch_size: 64
+  
+  pwc2d:
+    norm:
+      feature_pyramid: batch_norm
+      flow_estimator: null
+      context_network: null
+    max_displacement: 4
+
+  pwc3d:
+    norm:
+      feature_pyramid: batch_norm
+      correlation: null
+      flow_estimator: null
+    k: 16
+    kernel_size: [10, 20]
+
+  loss2d:
+    level_weights: [8, 4, 2, 1, 0.5]
+    order: robust
+
+  loss3d:
+    level_weights: [8, 4, 2, 1, 0.5]
+    order: robust
+
+
+training:
+  opt: adamw
+  momentum: 0.9
+  weight_decay: 0.000001
+  grad_max_norm: 20
+  accum_iter: 1
+
+  sched: cosine
+  epochs: 400
+  lr_2d: 0.00005 # LR for 2D branch
+  lr_3d: 0.0001 # LR for 3D branch
+  min_lr: 0.00001
+  warmup_lr: 0.00001
+  warmup_epochs: 2
+  cooldown_epochs: 0
+
+log:
+  dir: ./experiment
+  run_name: flyingthings
+  save_ckpt: true
+  save_scalar_summary: true
+  save_ckpt_every_n_epochs: 1
+  save_summary_every_n_steps: 100
+
+ckpt:
+  path: ./checkpoints/best.pt
+  save_path: ./checkpoints
+  resume: false
+
+val_interval: 10
+gpu: 0
+port: random # for multi-gpu training
+amp: false
+debug: false
+sync_bn: true
